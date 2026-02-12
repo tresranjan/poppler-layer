@@ -7,36 +7,41 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    container:
-      image: amazonlinux:2
-
     steps:
-      - name: Install Poppler
+      - uses: actions/checkout@v4
+      
+      - name: Install Poppler and dependencies
         run: |
-          yum update -y --disableplugin=systemd --exclude=systemd
-          yum install -y --disableplugin=systemd --exclude=systemd poppler-utils zip  
-
-          
-
-      - name: Prepare layer
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils libpoppler-dev zip
+      
+      - name: Create layer structure
         run: |
-          mkdir -p layer/bin
+          mkdir -p layer/python/bin
           mkdir -p layer/lib
-
-          cp /usr/bin/pdfinfo layer/bin/
-          cp /usr/bin/pdftoppm layer/bin/
-
-          cp /usr/lib64/libpoppler.so* layer/lib/ || true
-          cp /usr/lib64/libjpeg.so* layer/lib/ || true
-          cp /usr/lib64/libpng.so* layer/lib/ || true
-          cp /usr/lib64/libtiff.so* layer/lib/ || true
-          cp /usr/lib64/libopenjp2.so* layer/lib/ || true
-
-      - name: Zip layer
+          
+          # Copy poppler binaries
+          cp /usr/bin/pdfinfo layer/python/bin/
+          cp /usr/bin/pdftoppm layer/python/bin/
+          cp /usr/bin/pdftotext layer/python/bin/
+          cp /usr/bin/pdftops layer/python/bin/
+          cp /usr/bin/pdfimages layer/python/bin/
+          
+          # Copy required libraries
+          cp /usr/lib/x86_64-linux-gnu/libpoppler.so* layer/lib/ || true
+          cp /usr/lib/x86_64-linux-gnu/libjpeg.so* layer/lib/ || true
+          cp /usr/lib/x86_64-linux-gnu/libpng.so* layer/lib/ || true
+          cp /usr/lib/x86_64-linux-gnu/libtiff.so* layer/lib/ || true
+          cp /usr/lib/x86_64-linux-gnu/libopenjp2.so* layer/lib/ || true
+          
+          # Make binaries executable
+          chmod +x layer/python/bin/*
+      
+      - name: Create zip file
         run: |
           cd layer
           zip -r9 ../poppler-layer.zip .
-
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
