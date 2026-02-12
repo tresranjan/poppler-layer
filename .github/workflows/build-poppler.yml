@@ -13,8 +13,10 @@ jobs:
     steps:
       - name: Install Poppler
         run: |
-          yum update -y --disableplugin=systemd
-          yum install -y --disableplugin=systemd poppler-utils zip
+          yum update -y --disableplugin=systemd --exclude=systemd
+          yum install -y --disableplugin=systemd --exclude=systemd poppler-utils zip  
+
+          
 
       - name: Prepare layer
         run: |
