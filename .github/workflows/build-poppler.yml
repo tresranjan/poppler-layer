@@ -1,0 +1,42 @@
+name: Build Poppler Lambda Layer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    container:
+      image: amazonlinux:2
+
+    steps:
+      - name: Install Poppler
+        run: |
+          yum update -y
+          yum install -y poppler-utils zip
+
+      - name: Prepare layer
+        run: |
+          mkdir -p layer/bin
+          mkdir -p layer/lib
+
+          cp /usr/bin/pdfinfo layer/bin/
+          cp /usr/bin/pdftoppm layer/bin/
+
+          cp /usr/lib64/libpoppler.so* layer/lib/ || true
+          cp /usr/lib64/libjpeg.so* layer/lib/ || true
+          cp /usr/lib64/libpng.so* layer/lib/ || true
+          cp /usr/lib64/libtiff.so* layer/lib/ || true
+          cp /usr/lib64/libopenjp2.so* layer/lib/ || true
+
+      - name: Zip layer
+        run: |
+          cd layer
+          zip -r9 ../poppler-layer.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: poppler-layer
+          path: poppler-layer.zip
